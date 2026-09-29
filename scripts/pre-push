@@ -1,0 +1,3 @@
+#!/bin/sh
+# Free local CI: blocks the push if lint or tests fail.
+ruff check . && python -m pytest -q

@@ -1,0 +1,11 @@
+scikit-learn
+pandas
+joblib
+pydantic>=2
+fastapi
+uvicorn
+mcp>=1.2,<2
+openai
+pytest
+ruff
+httpx

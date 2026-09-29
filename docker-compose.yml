@@ -1,0 +1,26 @@
+# Free, self-hosted stack. Default = offline mock mode (no LLM needed).
+# Local LLM (free):  docker compose --profile llm up --build
+#   then: docker compose exec ollama ollama pull llama3.1:8b
+#   and put in .env:  LLM_BASE_URL=http://ollama:11434/v1  LLM_MODEL=llama3.1:8b  LLM_API_KEY=x
+services:
+  sentinel:
+    build: .
+    ports: ["8000:8000"]
+    volumes: ["sentinel-data:/data"]
+    env_file: [{ path: .env, required: false }]
+    extra_hosts: ["host.docker.internal:host-gateway"]   # lets you use Ollama running on the host
+    restart: unless-stopped
+
+  scheduler:                     # replaces a paid/hosted cron: triage every 15 min
+    image: curlimages/curl
+    depends_on: [sentinel]
+    entrypoint: ["sh","-c","sleep 20; while true; do curl -fsS -X POST http://sentinel:8000/triage -H \"X-API-Key: $$SENTINEL_API_KEY\" || true; sleep 900; done"]
+    env_file: [{ path: .env, required: false }]
+    restart: unless-stopped
+
+  ollama:                        # optional local LLM, only with --profile llm
+    image: ollama/ollama
+    profiles: ["llm"]
+    volumes: ["ollama-models:/root/.ollama"]
+
+volumes: { sentinel-data: {}, ollama-models: {} }
